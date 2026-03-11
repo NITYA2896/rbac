@@ -5,6 +5,25 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const { protect, adminOnly } = require('../middleware/authMiddleware');
 
+// Seed Database Route
+router.get('/seed', async (req, res) => {
+  try {
+    await User.deleteMany({});
+    const passwordHash = await bcrypt.hash('password123', 10);
+    const users = [
+      { username: 'admin1', password: passwordHash, role: 'admin', permissions: { read: false, write: false, readWrite: true } },
+      { username: 'admin2', password: passwordHash, role: 'admin', permissions: { read: false, write: true, readWrite: false } },
+      { username: 'user1', password: passwordHash, role: 'normal', permissions: { read: false, write: true, readWrite: false } },
+      { username: 'user2', password: passwordHash, role: 'normal', permissions: { read: false, write: false, readWrite: true } },
+      { username: 'user3', password: passwordHash, role: 'normal', permissions: { read: true, write: false, readWrite: false } }
+    ];
+    await User.insertMany(users);
+    res.json({ message: 'Database seeded successfully!' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Auth Login
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
